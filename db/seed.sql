@@ -3,14 +3,14 @@ USE company;
 INSERT INTO department
     (name)
 VALUES
-    ("dev"),
+    ("development"),
     ("accounting"),
     ("marketing");
 
 INSERT INTO role
     (title, salary, department_id)
 VALUES
-    ("junior", 100000, 1),
+    ("junior developer", 100000, 1),
     ("taxes", 80000, 2),
     ("mass marketer", 60000, 3);
 
