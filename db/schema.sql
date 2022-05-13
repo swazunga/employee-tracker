@@ -33,6 +33,10 @@ CREATE TABLE role
     FOREIGN KEY
         (role_id) REFERENCES role
         (id),
+        salary INTEGER NOT NULL,
+        FOREIGN KEY
+        (salary) REFERENCES role
+        (salary),
     manager_id INTEGER,
     FOREIGN KEY
         (manager_id) REFERENCES employee

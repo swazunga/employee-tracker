@@ -52,6 +52,9 @@ function startup() {
       }
       if (choice.firstQuestion === "Add Employee") {
         addEmployee();
+      }
+      if (choice.firstQuestion === "Update Employee's Role") {
+        updateEmployee();
       } else return;
     });
 }
@@ -84,6 +87,7 @@ function viewEmployees() {
     if (error) {
       throw error;
     }
+
     console.table(results);
     startup();
   });
@@ -154,17 +158,21 @@ function addRole() {
 }
 
 function addEmployee() {
-  const sqlCall = "SELECT * FROM role";
+  const sqlCall = "SELECT id, title FROM role";
   connection.query(sqlCall, function (error, results) {
     if (error) {
       throw error;
     }
     const roleArray = results.map((role) => role.title);
+    const roleList = results;
     connection.query("SELECT * FROM employee", function (error, results) {
       if (error) {
         throw error;
       }
-      const managerArray = results.map((manager) => manager.last_name);
+      const managerArray = results.map(
+        (manager) => manager.first_name + " " + manager.last_name
+      );
+      const managerList = results;
       const employeeQ = [
         {
           type: "input",
@@ -190,13 +198,67 @@ function addEmployee() {
         },
       ];
       inquirer.prompt(employeeQ).then((answer) => {
-        const role = results.find((role) => answer.role);
-        const manager = results.find((manager) => answer.manager);
+        const role = roleList.find((role) => role.title === answer.role);
+        const manager = managerList.find((manager) => {
+          const fullName = manager.first_name + " " + manager.last_name;
+          return fullName === answer.manager;
+        });
+        console.log(roleList, role);
         const sqlCall =
           "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)";
         connection.query(
           sqlCall,
           [answer.first, answer.last, role.id, manager.id],
+          function (error, results) {
+            if (error) {
+              throw error;
+            }
+            startup();
+          }
+        );
+      });
+    });
+  });
+}
+
+function updateEmployee() {
+  const sqlCall = "SELECT * FROM employee";
+  connection.query(sqlCall, function (error, results) {
+    if (error) {
+      throw error;
+    }
+    const employeeList = results;
+    const employeeArray = results.map(
+      (employee) => employee.first_name + " " + employee.last_name
+    );
+    connection.query("SELECT * FROM role", function (error, results) {
+      if (error) {
+        throw error;
+      }
+      const roleArray = results.map((role) => role.title);
+      const roleList = results;
+      const changeQ = [
+        {
+          type: "list",
+          name: "employee",
+          message: "Which employee would you like to update?",
+          choices: employeeArray,
+        },
+        {
+          type: "list",
+          name: "role",
+          message: "Which role would you like this employee to have?",
+          choices: roleArray,
+        },
+      ];
+      inquirer.prompt(changeQ).then((answer) => {
+        const employeeMatch = employeeList.find((employee) => {
+          const fullName = employee.first_name + " " + employee.last_name;
+          return fullName === answer.employee;
+        });
+        const role = roleList.find((role) => role.title === answer.role);
+        connection.query(
+          `UPDATE employee SET role_id=${role.id} WHERE id =${employeeMatch.id}`,
           function (error, results) {
             if (error) {
               throw error;
